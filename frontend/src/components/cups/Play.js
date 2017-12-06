@@ -1,67 +1,31 @@
 import React from 'react';
-import {Steps, Select, Form, Button, Row, Col} from 'antd';
+import {Table, Steps, Select, Form, Button, Row, Col} from 'antd';
 import api from '../../api';
-import Match from './Match';
+import Matches from './Matches';
+import {subsets, subsetsLineups, shuffle} from "./helpers";
 
-function subsets(input, size) {
-    let results = [], result, mask, i, total = Math.pow(2, input.length);
-    for (mask = size; mask < total; mask++) {
-        result = [];
-        i = input.length - 1;
-
-        do {
-            if ((mask & (1 << i)) !== 0) {
-                result.push(input[i]);
-            }
-        } while (i--);
-
-        if (result.length === size) {
-            results.push(result);
-        }
-    }
-
-    return results;
-}
-
-function subsetsLineups(subset) {
-    return [
-        [subset[0], subset[1], subset[2], subset[3]],
-        [subset[0], subset[2], subset[1], subset[3]],
-        [subset[0], subset[3], subset[1], subset[2]],
-    ]
-}
-
-function shuffle(array) {
-    let result = [...array];
-    let currentIndex = result.length, temporaryValue, randomIndex;
-
-    // While there remain elements to shuffle...
-    while (0 !== currentIndex) {
-
-        // Pick a remaining element...
-        randomIndex = Math.floor(Math.random() * currentIndex);
-        currentIndex -= 1;
-
-        // And swap it with the current element.
-        temporaryValue = result[currentIndex];
-        result[currentIndex] = result[randomIndex];
-        result[randomIndex] = temporaryValue;
-    }
-
-    return result;
-}
+const columns = [
+    {
+        title: 'Team 1 Score',
+        dataIndex: 'team1Score',
+        key: 'team1Score'
+    },
+];
 
 export default class extends React.Component {
     state = {
-        step: 0,
+        step: 3,//todo make step 0
         allPlayers: [],
         selectedPlayers: [],
         matches: [],
-        currentMatch: 0
+        currentMatch: 0,
+        results: []
     };
 
     fetchData() {
+        const {match: {params: {id}}} = this.props; //todo remove with result get
         api.players.all()(({data}) => this.setState({allPlayers: data, selectedPlayers: data.map(({id}) => id)})); //todo remove selectedplayers
+        api.cups.getResults(id)(({data}) => this.setState({results: data})) //TODO remove
     }
 
     componentWillMount() {
@@ -75,6 +39,16 @@ export default class extends React.Component {
         const flattenLineups = [].concat.apply([], allLineups);
         const applyKeys = flattenLineups.map((x, i) => ({key: i, lineup: x}));
         return shuffle(applyKeys);
+    }
+
+    finishMatch(team1Result, team2Result) {
+        const {match: {params: {id}}} = this.props;
+        const {currentMatch, matches} = this.state;
+        api.cups.addResult(id, matches[currentMatch].lineup, team1Result, team2Result)(
+            () => currentMatch < matches.length - 1 ?
+                this.setState({currentMatch: currentMatch + 1}) :
+                this.setState({step: 3})
+        );
     }
 
     renderPlayerSelect() {
@@ -137,15 +111,29 @@ export default class extends React.Component {
     renderMatches() {
         const {currentMatch, matches, allPlayers} = this.state;
         return (
-            <Match
+            <Matches
                 allPlayers={allPlayers}
-                match={matches[currentMatch].lineup}
+                matches={matches.map(({lineup}) => lineup)}
+                currentMatch={currentMatch}
+                finishMatch={(team1Result, team2Result) => this.finishMatch(team1Result, team2Result)}
+            />
+        )
+    }
+
+    renderResult() {
+        const {results} = this.state;
+        return (
+            <Table
+                dataSource={results.map(x => ({
+                    ...x,
+                    key: x.id
+                }))}
+                columns={columns}
             />
         )
     }
 
     render() {
-        // const {match: {params: {id}}} = this.props;
         const {step} = this.state;
         return (
             <div>
@@ -165,6 +153,8 @@ export default class extends React.Component {
                                     return this.renderShuffle();
                                 case 2:
                                     return this.renderMatches();
+                                case 3:
+                                    return this.renderResult();
                                 default:
                                     throw new Error();
                             }

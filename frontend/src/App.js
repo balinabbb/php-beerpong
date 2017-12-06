@@ -7,6 +7,7 @@ import {Layout, Menu, Icon} from 'antd';
 import configureStore, {getHistory} from './store';
 import Players from './components/players';
 import Cups from './components/cups';
+import Play from './components/cups/Play';
 
 const Header = Layout.Header;
 const Content = Layout.Content;
@@ -54,6 +55,7 @@ export default class extends React.Component {
                             }}>
                                 <Route exact path="/players" component={Players}/>
                                 <Route exact path="/cups" component={Cups}/>
+                                <Route exact path="/cups/:id" component={Play}/>
                             </Content>
                         </Layout>
                     </Layout>

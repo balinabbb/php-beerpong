@@ -26,7 +26,7 @@ function request(params) {
     };
     return fetch(`${baseUrl || url}${endPoint}`, fetchParams)
         .then(x => {
-            if (x.status === 200)
+            if (x.status === 200 || x.status === 201)
                 return { json: x.json() };
             if (x.ok)
                 return { result: x };

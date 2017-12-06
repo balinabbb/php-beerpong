@@ -30,8 +30,8 @@ export default class extends React.Component {
     }
 
     newCupClick() {
-        api.cups.save(moment().format('YYYY-MM-DD'))(() =>
-            true//push navigation here
+        api.cups.save(moment().format('YYYY-MM-DD'))(({id}) =>
+            this.props.history.push(`/cups/${id}`)
         );
     }
 

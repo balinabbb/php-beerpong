@@ -1,8 +1,10 @@
 import { message } from 'antd';
 import players from './_players';
+import cups from './_cups';
 
 export default {
     players,
+    cups
 }
 
 const url = 'http://127.0.01:8000/api/v1/';//https://crossorigin.me/...

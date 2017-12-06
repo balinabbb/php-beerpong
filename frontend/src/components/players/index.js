@@ -1,127 +1,112 @@
 import React from 'react';
-import { Table, Button, Modal, Input, Form } from 'antd';
+import {Table, Button, Modal, Input, Form} from 'antd';
 import api from '../../api';
 
 const columns = [
     {
-        title: 'Azonosító',
-        dataIndex: 'id',
-        key: 'id',
-    },
-    {
-        title: 'Név',
+        title: 'Name',
         dataIndex: 'name',
         key: 'name',
     },
     {
-        title: 'Leírás',
-        dataIndex: 'description',
-        key: 'description',
-    },
-]
+        title: 'Delete',
+        dataIndex: 'delete',
+        key: 'delete',
+    }
+];
 
 export default class extends React.Component {
     state = {
-        items: [],
+        data: [],
         modalVisible: false,
         name: '',
-        description: '',
-        specialization: null,
-        sportId: null
     };
 
-    nameInput = null
-    descriptionInput = null
+    nameInput = null;
 
-    fetchItems() {
-        api.players.all()(({data: items}) => this.setState({ items }));
+    fetchData() {
+        api.players.all()(({data}) => this.setState({data}));
     }
 
     componentWillMount() {
-        this.fetchItems();
-    }
-
-    closeModal() {
-        this.setState({ modalVisible: false, specialization: null })
+        this.fetchData();
     }
 
     modalSaveClick() {
-        const { name, description } = this.state;
+        const {name} = this.state;
         if (name === '') {
             this.nameInput.focus();
             return;
-        } else if (description === '') {
-            this.descriptionInput.focus();
-            return;
         }
-        api.players.save(name, description)(() =>
-            this.setState({ name: '', description: '', modalVisible: false })
+        api.players.save(name)(() =>
+            this.setState({name: '', modalVisible: false}, () => this.fetchData())
         );
     }
 
+    itemDeleteClick(id) {
+        Modal.confirm({
+            title: 'Confirm',
+            content: 'Are you sure want to delete?',
+            okText: 'Yes',
+            cancelText: 'No',
+            onOk: () => api.players.delete(id)(() =>
+                this.fetchData()
+            )
+        })
+    }
+
     getFormContent() {
-        const { name, description } = this.state;
+        const {name} = this.state;
         return (
             <div>
-                <Form.Item label="Név" help="A mező megadása kötelező" required>
+                <Form.Item label="Name" help="Name is required" required>
                     <Input
                         value={name}
                         ref={e => this.nameInput = e}
-                        onChange={e => this.setState({ name: e.target.value })} />
-                </Form.Item>
-                <Form.Item label="Leírás" help="A mező megadása kötelező" required>
-                    <Input
-                        value={description}
-                        ref={e => this.descriptionInput = e}
-                        onChange={e => this.setState({ description: e.target.value })} />
+                        onChange={e => this.setState({name: e.target.value})}/>
                 </Form.Item>
             </div>
         )
     }
 
-    didAddSpecialization(name, description) {
-        const { specialization } = this.state;
-        this.setState({
-            specialization: [...specialization, {
-                name,
-                description,
-                id: Math.max(...specialization.map(({ id }) => id)) + 1
-            }]
-        })
-    }
-
     render() {
-        const { items, modalVisible, specialization, sportId } = this.state;
+        const {data, modalVisible} = this.state;
         return (
             <div>
                 <Button
                     icon="plus"
                     type="primary"
-                    onClick={() => this.setState({ modalVisible: true })}
-                    style={{ marginBottom: 20 }}>Új sport</Button>
+                    onClick={() => this.setState({modalVisible: true})}
+                    style={{marginBottom: 20}}>New player</Button>
                 <Table
-                    dataSource={items.map(x => ({ ...x, key: x.id }))}
+                    dataSource={data.map(x => ({
+                        ...x,
+                        key: x.id,
+                        delete: (
+                            <Button
+                                type="danger"
+                                icon="delete"
+                                onClick={() => this.itemDeleteClick(x.id)}
+                            >
+                                Delete
+                            </Button>
+                        )
+                    }))}
                     columns={columns}
-                    onRow={({ id, specialization }) => ({
-                        onClick: () => this.setState({
-                            specialization,
-                            sportId: id,
-                            modalVisible: true
-                        }),
-                        style: { cursor: 'pointer' }
+                    onRow={({id, specialization}) => ({
+                        style: {cursor: 'pointer'}
                     })}
                 />
                 <Modal
                     visible={modalVisible}
-                    title={specialization ? "Specializáció" : "Új sport"}
-                    onCancel={() => this.closeModal()}
-                    width={specialization ? '70%' : undefined}
+                    title="New player"
+                    onCancel={() => this.setState({modalVisible: false})}
                     footer={(
                         <Button
                             type="primary"
-                            onClick={() => specialization ? this.closeModal() : this.modalSaveClick()}
+                            onClick={() => this.modalSaveClick()}
                         >
-                            {specialization ? "OK" : "Mentés"}
+                            Save
                         </Button>
                     )}
                 >

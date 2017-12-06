@@ -1,9 +1,9 @@
 import {call} from './';
 
-const baseUrl = 'players';
+const baseUrl = 'cups';
 
 export default {
     all: () => call(`${baseUrl}`),
-    save: (name) => call(`${baseUrl}`, 'post', {body: {name}}),
+    save: (date) => call(`${baseUrl}`, 'post', {body: {date}}),
     delete: (id) => call(`${baseUrl}/${id}`, 'del'),
 }

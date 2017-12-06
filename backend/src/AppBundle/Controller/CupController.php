@@ -2,8 +2,8 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Entity\Player;
-use AppBundle\Transformers\PlayerTransformer;
+use AppBundle\Entity\Cup;
+use AppBundle\Transformers\CupTransformer;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Component\Routing\RouterInterface;
@@ -11,22 +11,22 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 
-class PlayerController extends BaseController
+class CupController extends BaseController
 {
 
     public function __construct(RouterInterface $router)
     {
-        parent::__construct($router, 'listPlayers');
-        $this->setTransformers(new PlayerTransformer($router));
+        parent::__construct($router, 'listCups');
+        $this->setTransformers(new CupTransformer($router));
     }
 
     /**
-     * @Route("/players", name="listPlayers")
+     * @Route("/cups", name="listCups")
      * @Method({"GET"})
      */
     public function listAction(Request $request)
     {
-        $repository = $this->getDoctrine()->getRepository(Player::class);
+        $repository = $this->getDoctrine()->getRepository(Cup::class);
         $limit = (int) $request->get('limit', 10);
         $page = (int) $request->get('page', 1);
         $count = (int) $repository->createQueryBuilder('p')->select('COUNT(p.id)')->getQuery()->getSingleScalarResult();
@@ -45,7 +45,7 @@ class PlayerController extends BaseController
     }
 
     /**
-     * @Route("/players", name="createPlayer")
+     * @Route("/cups", name="createCup")
      * @Method({"POST"})
      */
     public function createAction(Request $request)
@@ -54,8 +54,8 @@ class PlayerController extends BaseController
 
         $data = json_decode($request->getContent(), true);
 
-        $entity = new Player();
-        $entity->fill($data);
+        $entity = new Cup();
+        $entity->setDate(\DateTime::createFromFormat('Y-m-d', $data['date']));
 
         $errors = $this->container->get('validator')->validate($entity);
 
@@ -70,13 +70,13 @@ class PlayerController extends BaseController
     }
 
     /**
-     * @Route("/players/{id}", requirements={"id" = "\d+"}, name="deletePlayer")
+     * @Route("/cups/{id}", requirements={"id" = "\d+"}, name="deleteCup")
      * @Method({"DELETE"})
      */
     public function deleteAction($id, Request $request)
     {
         $em = $this->getDoctrine()->getManager();
-        $entity = $em->getRepository(Player::class)->find($id);
+        $entity = $em->getRepository(Cup::class)->find($id);
         if (!$entity) {
             throw $this->createNotFoundException('No post found for id '.$id);
         }

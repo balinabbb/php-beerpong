@@ -58,14 +58,14 @@ export default class extends React.Component {
     getFormContent() {
         const {name} = this.state;
         return (
-            <div>
-                <Form.Item label="Name" help="Name is required" required>
-                    <Input
-                        value={name}
-                        ref={e => this.nameInput = e}
-                        onChange={e => this.setState({name: e.target.value})}/>
-                </Form.Item>
-            </div>
+            <Form.Item label="Name" help="Name is required" required>
+                <Input
+                    value={name}
+                    ref={e => e && e.focus()}
+                    onChange={e => this.setState({name: e.target.value})}
+                    onPressEnter={() => this.modalSaveClick()}
+                />
+            </Form.Item>
         )
     }
 

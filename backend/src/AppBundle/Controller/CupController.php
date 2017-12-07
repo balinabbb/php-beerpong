@@ -9,6 +9,7 @@ use AppBundle\Transformers\CupTransformer;
 use AppBundle\Transformers\ResultTransformer;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -56,14 +57,9 @@ class CupController extends BaseController
     public function cupResultsAction($id, Request $request)
     {
         $repository = $this->getDoctrine()->getRepository(Result::class);
-        $limit = (int)$request->get('limit', 10);
-        $page = (int)$request->get('page', 1);
-        $count = (int)$repository->createQueryBuilder('p')->select('COUNT(p.id)')->getQuery()->getSingleScalarResult();
         $restresult = $repository->createQueryBuilder('p')
             ->select()
             ->where('IDENTITY(p.cup) = ?1')
-            ->setFirstResult($limit * ($page - 1))
-            ->setMaxResults($limit)
             ->setParameter(1, $id)
             ->getQuery()
             ->getResult();
@@ -72,8 +68,17 @@ class CupController extends BaseController
             throw $this->createNotFoundException('No results found.');
         }
 
-        $this->setTransformers(new ResultTransformer());
-        return $this->collection($restresult, $count, $limit, $page);
+        $transformer = new ResultTransformer();
+        $result = array(
+            'data' => array(),
+        );
+
+        foreach ($restresult as $key => $value) {
+            $result['data'][] = $transformer->transform($value);
+        }
+
+        $response = new JsonResponse($result, 200);
+        return $response;
     }
 
     /**
@@ -114,8 +119,8 @@ class CupController extends BaseController
         }
 
         $data = json_decode($request->getContent(), true);
-        $team1Result = intval($data['team1Result']);
-        $team2Result = intval($data['team2Result']);
+        $team1Result = $data['team1Result'];
+        $team2Result = $data['team2Result'];
         $playerIds = $data['players'];
         $playerEntities = [];
         foreach ($playerIds as $playerId) {

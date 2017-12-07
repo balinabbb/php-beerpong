@@ -24,6 +24,9 @@ export default class extends React.Component {
 
         return (
             <div>
+                <Row style={{textAlign: 'center'}}>
+                    {nextMatchIndex}/{matches.length}
+                </Row>
                 <Row className="matches-row">
                     <Col offset={5} xs={5}>
                         <div>{players[0].name} - {players[1].name}</div>

@@ -72,7 +72,8 @@ export default class extends React.Component {
                     }))}
                     columns={columns}
                     onRow={({id, specialization}) => ({
-                        style: {cursor: 'pointer'}
+                        style: {cursor: 'pointer'},
+                        onClick: (e) => e.target.nodeName === 'TD' && this.props.history.push('/cups/results/' + id)
                     })}
                 />
             </div>

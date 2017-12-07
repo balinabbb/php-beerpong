@@ -1,35 +1,21 @@
 import React from 'react';
-import {Table, Steps, Select, Form, Button, Row, Col} from 'antd';
+import {Steps, Select, Form, Button, Row, Col} from 'antd';
 import api from '../../api';
 import Matches from './Matches';
+import Results from './Results';
 import {subsets, subsetsLineups, shuffle} from "./helpers";
-
-const columns = [
-    {
-        title: 'Team 1 Score',
-        dataIndex: 'team1Score',
-        key: 'team1Score'
-    },
-];
 
 export default class extends React.Component {
     state = {
-        step: 3,//todo make step 0
+        step: 0,
         allPlayers: [],
         selectedPlayers: [],
         matches: [],
-        currentMatch: 0,
-        results: []
+        currentMatch: 0
     };
 
-    fetchData() {
-        const {match: {params: {id}}} = this.props; //todo remove with result get
-        api.players.all()(({data}) => this.setState({allPlayers: data, selectedPlayers: data.map(({id}) => id)})); //todo remove selectedplayers
-        api.cups.getResults(id)(({data}) => this.setState({results: data})) //TODO remove
-    }
-
     componentWillMount() {
-        this.fetchData();
+        api.players.all()(({data}) => this.setState({allPlayers: data, selectedPlayers: data.map(({id}) => id).slice(0, 4)}));
     }
 
     getMatches() {
@@ -121,15 +107,8 @@ export default class extends React.Component {
     }
 
     renderResult() {
-        const {results} = this.state;
         return (
-            <Table
-                dataSource={results.map(x => ({
-                    ...x,
-                    key: x.id
-                }))}
-                columns={columns}
-            />
+            <Results id={this.props.match.params.id}/>
         )
     }
 

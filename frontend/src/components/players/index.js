@@ -61,7 +61,7 @@ export default class extends React.Component {
             <Form.Item label="Name" help="Name is required" required>
                 <Input
                     value={name}
-                    ref={e => e && e.focus()}
+                    autoFocus={true}
                     onChange={e => this.setState({name: e.target.value})}
                     onPressEnter={() => this.modalSaveClick()}
                 />
